@@ -9,4 +9,4 @@ The student org app will have 3 classes of users:
 
 Status:
 - Implemented service for Sign Up and Login
-- Currently working on service to create and manage student org page
+- *Currently working on service to create and manage student org page*
