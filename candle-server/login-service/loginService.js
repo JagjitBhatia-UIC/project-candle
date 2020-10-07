@@ -8,7 +8,7 @@ const port = process.argv.slice(2)[0];
 const app = express();
 app.use(bodyParser.json());
 
-const db_url = "mongodb://localhost:27017/";
+const db_url = "mongodb://localhost:27017/";    // TODO: Update url with URL of hosted database
 
 // Sign Up API
 app.post('/signup', (req, res) => {
@@ -30,6 +30,7 @@ app.post('/signup', (req, res) => {
 
             else {
                 bcrypt.hash(_password, 10, (err, hash) => {
+                    if(err) throw err;
 
                     let new_user = {username: _username, pwd_hash: hash};
 
@@ -43,7 +44,7 @@ app.post('/signup', (req, res) => {
 
         });
     });
-
+ 
 });
 
 
@@ -67,6 +68,8 @@ app.post('/login', (req, res) => {
 
             else {
                 bcrypt.compare(_password, result.pwd_hash, (err, match) => {
+                    if(err) throw err;
+
                     if(!match) {
                         res.status(401).send("Invalid username and password combination!");
                         db.close();
