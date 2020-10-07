@@ -7,3 +7,6 @@ The student org app will have 3 classes of users:
 - **Members** - These individuals will be able to attend events, join discussion threads, and are general populace of the org; Followers with higher access privileges; May require membership fee (up to the org)
 - **Followers** - These individuals will be able to view org pages and subscribe for updates; Lowest access privileges 
 
+Status:
+- Implemented service for Sign Up and Login
+- *Currently working on service to create and manage student org page*
