@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const mongo = require('mongodb').MongoClient;
+const mongodb = require('mongodb');
+const mongo = mongodb.MongoClient;
 
 const port = process.argv.slice(2)[0];
 
@@ -43,7 +44,7 @@ app.put('/addMember', (req, res) => {
 
         //request -- userid of member adding, userid of new member, id of org, role of new member
 
-        dbo.collection('orgs').findOne({_id: req.body.org_id}, (err, result) => {
+        dbo.collection('orgs').findOne({_id: new mongodb.ObjectId(req.body.org_id)}, (err, result) => {
             if(err) throw err;
 
             if(!result) {
@@ -68,10 +69,10 @@ app.put('/addMember', (req, res) => {
                 }
 
                 else {
-                    let filter = {_id: req.body.org_id};
-                    let query = { $push: { members: {id: req.body.user_id, role: req.body.role, title: req.body.title || ''} } };
+                    let filter = {_id: new mongodb.ObjectId(req.body.org_id)};
+                    let query = { $push: { members: {id: req.body.newMember_id, role: req.body.role, title: req.body.title || ''} } };
 
-                    dbo.collection('orgs').updateOne(filter, query, (err, res) => {
+                    dbo.collection('orgs').updateOne(filter, query, (err, result) => {
                         if(err) throw err;
                         res.status(202).send("New member added.");
                         db.close();
