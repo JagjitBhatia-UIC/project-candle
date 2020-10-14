@@ -93,10 +93,22 @@ app.put('/addMember', (req, res) => {
                     let filter = {_id: new mongodb.ObjectId(req.body.org_id)};
                     let query = { $push: { members: {id: req.body.newMember_id, role: req.body.role, title: req.body.title || ''} } };
 
-                    dbo.collection('orgs').updateOne(filter, query, (err, result) => {
+                    dbo.collection('orgs').updateOne(filter, query, (err, record) => {
                         if(err) throw err;
-                        res.status(202).send(result);
-                        db.close();
+                        res.status(202).send("Member successfully added!");
+                       
+                
+                        let query2 = { $pull: { requests: {id: req.body.newMember_id} } };
+                        dbo.collection('orgs').updateOne(filter, query2, (err, removed) => {
+                            if(err) throw err;
+                            
+                            else {
+                                    console.log("Request for User ", req.body.newMember_id, " deleted!");
+                            }
+                            db.close();
+                        });
+                
+                       
                     });
                 }
             }
