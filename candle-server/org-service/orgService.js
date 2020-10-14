@@ -8,7 +8,7 @@ const port = process.argv.slice(2)[0];
 const app = express();
 app.use(bodyParser.json());
 
-const db_url = "mongodb://localhost:27017/";    // TODO: Update url with URL of hosted database
+const db_url = "mongodb://localhost:27017/";    // TODO: Update url with URL of hosted database (e.g. AWS, MongoDB Atlas)
 
 // Get All Orgs API
 app.get('/getAllOrgs', (req, res) => {
@@ -101,7 +101,7 @@ app.put('/addMember', (req, res) => {
                         let query2 = { $pull: { requests: {id: req.body.newMember_id} } };
                         dbo.collection('orgs').updateOne(filter, query2, (err, removed) => {
                             if(err) throw err;
-                            
+
                             else {
                                     console.log("Request for User ", req.body.newMember_id, " deleted!");
                             }
@@ -116,6 +116,8 @@ app.put('/addMember', (req, res) => {
     });
 });
 
+
+// Join Org API
 app.put('/joinOrg', (req, res) => {
     mongo.connect(db_url, (err, db) => {
         if(err) throw err;
