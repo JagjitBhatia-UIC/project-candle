@@ -85,6 +85,7 @@ app.put('/addMember', (req, res) => {
 
                 if(req.body.role == 'member') {
                     authorized = (result.members.find(member => (member.id == req.body.user_id && (member.role == 'admin' || member.role == 'contributor'))) != null);
+                    authorized |= (req.body.join_key == result.join_key)
                 }
 
                 if(!authorized) {
@@ -106,7 +107,7 @@ app.put('/addMember', (req, res) => {
                             if(err) throw err;
 
                             else {
-                                    console.log("Request for User ", req.body.newMember_id, " deleted!");
+                                    if(removed.ops) console.log("Request for User ", req.body.newMember_id, " deleted!");
                             }
                             db.close();
                         });
