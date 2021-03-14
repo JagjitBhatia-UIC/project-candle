@@ -35,7 +35,6 @@ app.post('/createOrg', (req, res) => {
         let dbo = db.db('candleDB');
 
         new_profile = {
-            user_id: req.body.user_id,
             name: req.body.name,
             logo_url: req.body.logo_url,
             bio: req.body.bio,
