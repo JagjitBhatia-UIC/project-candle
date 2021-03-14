@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongodb = require('mongodb');
+const { v4: uuidv4 } = require('uuid');
 const mongo = mongodb.MongoClient;
 
 const port = process.argv.slice(2)[0];
@@ -41,7 +42,9 @@ app.post('/createOrg', (req, res) => {
             institution: req.body.institution,
             members: [{id: req.body.user_id, role: 'admin', title: req.body.title || ''}],
             requests: [],
-            public: req.body.public       // If this is set to true, then anyone can join
+            public: req.body.public,       // If this is set to true, then anyone can join
+            join_key: req.body.join_key || uuidv4()   // Allows requestor to auto-join without permission
+            
         }
 
         dbo.collection('orgs').insertOne(new_profile, (err, doc) => {
@@ -57,7 +60,7 @@ app.post('/createOrg', (req, res) => {
 app.put('/addMember', (req, res) => {
     mongo.connect(db_url, (err, db) => {
         if(err) {
-            console.log("this is the prahblem");
+            console.log("Cannot connect to mongo!");
             throw err;
         }
 
@@ -131,8 +134,10 @@ app.put('/joinOrg', (req, res) => {
                 res.status(400).send("Organization does not exist.");
                 db.close();
             }
+            
 
-            if(result.public) {
+            // Check to see if org is either public or if user provides correct join key
+            if(result.public || req.body.join_key == result.join_key) {
                 res.redirect(307, '/addMember');
             }
 
