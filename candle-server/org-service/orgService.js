@@ -3,6 +3,8 @@ const bodyParser = require('body-parser');
 const mongodb = require('mongodb');
 const { v4: uuidv4 } = require('uuid');
 const mongo = mongodb.MongoClient;
+const amqp = require('amqplib/callback_api');
+const axios = require('axios');
 
 const port = process.argv.slice(2)[0];
 
@@ -10,6 +12,8 @@ const app = express();
 app.use(bodyParser.json());
 
 const db_url = "mongodb://localhost:27017/";    // TODO: Update url with URL of hosted database (e.g. AWS, MongoDB Atlas)
+const mq_url = "amqp://localhost";
+const userService_url = "";
 
 // Get All Orgs API
 app.get('/getAllOrgs', (req, res) => {

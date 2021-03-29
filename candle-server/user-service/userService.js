@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongodb = require('mongodb')
 const mongo = mongodb.MongoClient;
+const amqp = require('amqplib/callback_api');
 
 const port = process.argv.slice(2)[0];
 
@@ -26,7 +27,6 @@ app.get('/getAllMemberships', (req, res) => {
             //Format output -- {org: (org object), membership: (membership object)}
             let _memberships = []
             let _org = {};
-            let member;
             
             result.forEach(elem => {
                 {
@@ -52,12 +52,61 @@ app.get('/getAllMemberships', (req, res) => {
 });
 
 // POST inviteUser
-// -- add join request {newMember_id, org_id, role, title join_key} to request queue
-// -- send notification to user of type JOIN_REQUEST
+// -- create and push join request of format {user_id, org_id, role, title, join_key} to requests array
+// -- send message to notificationService of type user-invite
 
-// DELETE acceptInvite
+app.post('/inviteUser', (req, res) => {
+    mongo.connect(db_url, (err, db) => {
+        let dbo = db.db('candleDB');
+
+        let filter = {_id: new mongodb.ObjectId(req.body.user_id)};
+        let query = { $push: { requests: {org_id: req.body.org_id, role: req.body.role, title: req.body.title || '', join_key: req.body.join_key} } };
+
+        dbo.collection('users').updateOne(filter, query, (err, result) => {
+            if(err) throw err;
+            db.close();
+
+            amqp.connect(mq_url, (connect_error, connection) => {
+                if (connect_error) {
+                    throw connect_error;
+                }
+        
+                connection.createChannel((chan_error, channel) => {
+                    if(chan_error) {
+                        throw chan_error;
+                    }
+        
+                    const queue = 'notifQueue';
+                    let msg = {
+                        type: 'user-invite',
+                        body: {
+                            user_id: req.body.user_id,
+                            org_id: req.body.org_id,
+                            role: req.body.role,
+                            title: req.body.title,
+                            join_key: req.body.join_key
+                        }
+                    };
+        
+                    channel.assertQueue(queue, {durable: false});
+        
+                    channel.sendToQueue(queue, Buffer.from(msg));
+        
+                    res.status(202).send("Invitation Sent!");
+                });
+            });
+
+        });
+
+    });
+
+});
+
+// PUT acceptInvite
 // -- delete join request from request queue
 // -- call org-service/joinOrg <= (request obj)
+
+
 
 // POST notifyUser
 // -- send notification to user
