@@ -3,7 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongodb = require('mongodb')
 const mongo = mongodb.MongoClient;
-const amqp = require('amqplib/callback_api');
+const axios = require('axios');
 
 const port = process.argv.slice(2)[0];
 
@@ -23,7 +23,7 @@ app.get('/getAllMemberships', (req, res) => {
         
         dbo.collection('orgs').find({members : {$elemMatch: {id: req.query.user_id} }}).toArray((err, result) => {
             if(err) throw err;
-
+            files
             //Format output -- {org: (org object), membership: (membership object)}
             let _memberships = []
             let _org = {};
@@ -66,35 +66,23 @@ app.post('/inviteUser', (req, res) => {
             if(err) throw err;
             db.close();
 
-            amqp.connect(mq_url, (connect_error, connection) => {
-                if (connect_error) {
-                    throw connect_error;
+            let invite_msg = {
+                type: 'user-invite',
+                body: {
+                    user_id: req.body.user_id,
+                    org_id: req.body.org_id,
+                    role: req.body.role,
+                    title: req.body.title,
+                    join_key: req.body.join_key
                 }
-        
-                connection.createChannel((chan_error, channel) => {
-                    if(chan_error) {
-                        throw chan_error;
-                    }
-        
-                    const queue = 'notifQueue';
-                    let msg = {
-                        type: 'user-invite',
-                        body: {
-                            user_id: req.body.user_id,
-                            org_id: req.body.org_id,
-                            role: req.body.role,
-                            title: req.body.title,
-                            join_key: req.body.join_key
-                        }
-                    };
-        
-                    channel.assertQueue(queue, {durable: false});
-        
-                    channel.sendToQueue(queue, Buffer.from(msg));
-        
-                    res.status(202).send("Invitation Sent!");
-                });
-            });
+            };
+
+            axios.post(notifService_url + '/notifyUser', {msg: invite_msg}).then(response => {
+                if(response.status != 200) res.status(response.status).send(response.data);
+
+                else res.status(200).send("Invitation Sent!");
+            })
+            
 
         });
 
