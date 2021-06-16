@@ -10,4 +10,4 @@ The student org app will have 4 classes of users:
 Status:
 - Implemented service for Sign Up and Login
 - Implemented service to create and manage student org page
-- Creating client mobile application using React native
+- *Creating client mobile application using React native*
