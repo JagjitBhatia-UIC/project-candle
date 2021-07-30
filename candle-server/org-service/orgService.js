@@ -44,9 +44,9 @@ app.get('/getOrgsByID', (req, res) => {
 
         let dbo = db.db('candleDB');
 
-        dbo.collection('orgs').find({members : {$elemMatch: {id: req.query.user_id} }}, (error, result) => {
+        dbo.collection('orgs').find({members : {$elemMatch: {id: req.query.user_id} }}).toArray((error, result) => {
             if(error) throw error;
-            
+                        
             res.status(200).send({orgs: result});
             db.close();
 
@@ -68,7 +68,7 @@ app.post('/createOrg', (req, res) => {
             institution: req.body.institution,
             members: [{id: req.body.user_id, role: 'admin', title: req.body.title || ''}],
             requests: [],
-            public: req.body.public,       // If this is set to true, then anyone can join without permission
+            public: req.body.public || false,       // If this is set to true, then anyone can join without permission
             join_key: req.body.join_key || uuidv4()   // Allows requestor to auto-join without permission
             
         }
@@ -111,8 +111,8 @@ app.put('/addMember', (req, res) => {
 
                 if(req.body.role == 'member') {
                     authorized = (result.members.find(member => (member.id == req.body.user_id && (member.role == 'admin' || member.role == 'contributor'))) != null);
-                    authorized |= (req.body.join_key == result.join_key)
-                    authorized |= result.public     // Auto-join if org is public
+                    authorized = authorized || (req.body.join_key == result.join_key)
+                    authorized = authorized || result.public     // Auto-join if org is public
                 }
 
                 if(!authorized) {

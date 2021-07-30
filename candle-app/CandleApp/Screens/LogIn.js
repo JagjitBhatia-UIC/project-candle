@@ -7,7 +7,9 @@ export class LogIn extends React.Component {
 	constructor(props) {
 		super(props);
 		this.navigation = props.navigation;
-		this.state = {username: "", password, failedAttempt: false};
+		this.state = {username: "", password: "", failedAttempt: false};
+		this.attemptLogIn = this.attemptLogIn.bind(this);
+
 	}
 
 	attemptLogIn() {
@@ -15,17 +17,21 @@ export class LogIn extends React.Component {
 			username: this.state.username, 
 			password: this.state.password
 		}).then(res => {
-			if(res.status == 401) failedAttempt = true;
-			else {
+			if(res.status == 202) {
 				UserData.user_id = res.data.user_id;
 				this.navigation.navigate('Home');
 			}
+		}).catch(error => {
+			if(error.response.status == 401) this.setState({username: this.state.username, password: this.state.password, failedAttempt: true});
 		})
 	}
 
 	render() {
+		let unauthMsg;
+		if(this.state.failedAttempt) unauthMsg = <Text style={styles.unauth}>Log in failed! Please re-enter username and password combination.</Text>
 		return (
 			<View style={{flex: 1, padding: 10, alignItems: 'center', paddingBottom: 100}}>
+				{unauthMsg}
 				<Image style={styles.logo}
         source={require('../assets/candlepic.png')}/>
 				<View style={{marginVertical: 10}}>
@@ -34,7 +40,7 @@ export class LogIn extends React.Component {
 						style={styles.input}
 						placeholder=" Enter username "
 						onChangeText={text => this.setState({username: text, password: this.state.password, failedAttempt: false})}
-						defaultValue={this.state.input}
+						defaultValue={this.state.username}
 					/>
 				</View>
 				<View style={{marginTop: 10, marginBottom: 30}}>
@@ -43,10 +49,10 @@ export class LogIn extends React.Component {
 						style={styles.input}
 						placeholder=" Enter password"
 						onChangeText={text => this.setState({username: this.state.username, password: text, failedAttempt: false})}
-						defaultValue={this.state.input}
+						defaultValue={this.state.password}
 					/>
 				</View>
-				<Pressable style = {styles.button} onPress={}>
+				<Pressable style = {styles.button} onPress={this.attemptLogIn}>
 						<Text style = {styles.text}>Log In</Text>
 				</Pressable>
 			</View>
@@ -61,6 +67,11 @@ const styles = StyleSheet.create({
 	  borderWidth: 2,
 	  marginTop: 10,
 	  borderRadius: 8,
+	},
+	unauth: {
+		fontSize: 12,
+		color: 'red',
+		fontWeight: 'bold'
 	},
 	logo: {
 		width: 250,
